@@ -127,9 +127,13 @@ Las cuatro operaciones CRUD se mapean a transiciones con semántica específica:
 | Update | `Xs_ABIERTO -> X_ABIERTO` via `editarX()` o auto-transición en `X_ABIERTO` | Pasa a o permanece en edición |
 | Delete | Auto-transición en `Xs_ABIERTO` via `eliminarX()` | Operación in situ, sin cambio de estado |
 
-Create y Update comparten estado destino (`X_ABIERTO`). Crear registra datos mínimos
-y redirige inmediatamente a edición; desde ahí el usuario continúa sin cambio de
-contexto.
+Create y Update comparten estado destino (`X_ABIERTO`). Esto no es una simplificación
+del diagrama sino la materialización de la filosofía C→U: el caso de uso Create es
+deliberadamente delgado — solicita solo los datos mínimos indispensables, crea la
+entidad con información básica y transfiere inmediatamente el control al caso de uso
+Update para la edición completa. La topología del diagrama hace visible esta decisión:
+si Create y Update llevan al mismo estado, el sistema no distingue entre "recién
+creado" y "en edición".
 
 #### Patrón de retorno al hub
 
@@ -189,6 +193,14 @@ La descripción de cada transición usa vocabulario controlado según el agente:
 | introduce | permite introducir |
 | solicita introducir | permite solicitar |
 | solicita | presenta / muestra / visualiza |
+
+#### Filosofía C→U en el detalle de Create
+
+El detalle de cualquier caso de uso Create sigue el principio del delgado: recoge
+únicamente los datos mínimos indispensables para que la entidad exista, crea la
+entidad y cierra transfiriendo el control a Update. No recoge datos opcionales,
+no valida más allá de lo estrictamente necesario para crear. Todo lo demás pertenece
+al detalle de Update.
 
 #### Contraindicaciones
 
@@ -257,4 +269,29 @@ de interacción estado a estado.
 
 ---
 
-<!-- paso 4 y siguientes: en construcción -->
+## Paso 4: Estructuración de casos de uso
+
+**Disciplina:** requisitos
+
+Al detallar múltiples casos de uso aparecen sub-flujos que se repiten en varios de
+ellos. Esos sub-flujos se factorizan en casos de uso nuevos, lo que produce las
+relaciones `<<include>>` y `<<extend>>` del modelo.
+
+Este paso tiene dos fuentes de `<<include>>`:
+
+- **Topológica** (ya presente desde el diagrama de contexto): consecuencia de la
+  navegación. Si la única ruta a un estado pasa por otro caso de uso, la inclusión
+  es necesaria.
+- **Por factorización** (emerge aquí): sub-flujos comunes detectados al comparar
+  los detalles de varios casos de uso.
+
+El resultado actualiza tres artefactos:
+- Los diagramas de casos de uso (paso 2.2): se añaden las relaciones `<<include>>`
+  y `<<extend>>` identificadas.
+- Los detalles de los casos de uso involucrados (paso 3.1): se sustituyen los
+  sub-flujos factorizados por la referencia al nuevo caso de uso.
+- Se crean nuevos casos de uso con su propio detalle y prototipo correspondientes.
+
+---
+
+<!-- paso 5 y siguientes: en construcción -->
