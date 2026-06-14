@@ -159,6 +159,19 @@ la necesidad de especificación textual adicional.
 
 ---
 
+### 2.3.1 Captura de requisitos no funcionales
+
+Al cerrar el diagrama de contexto de cada actor se hace una primera revisión de
+requisitos no funcionales que son visibles a ese nivel: rendimiento, seguridad,
+disponibilidad, usabilidad como restricción. Se acumulan en un documento dedicado:
+**Requisitos no funcionales / Especificación suplementaria**.
+
+Al cerrar el detalle de cada caso de uso se hace una segunda revisión: los requisitos
+no funcionales que emergen de la interacción concreta se añaden al mismo documento.
+
+Las reglas de negocio no tienen artefacto propio: viven en el detalle del caso de
+uso que las hace cumplir.
+
 ### 2.4 Priorización de casos de uso
 
 La unidad de trabajo es la rama completa del diagrama de contexto: todos los casos de
