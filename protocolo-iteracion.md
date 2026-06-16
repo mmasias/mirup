@@ -120,6 +120,44 @@ observaciones. El registro lo escribe el orquestador; nunca se delega.
 Este es también el tercer punto donde humano y CORRAL divergen en su comportamiento
 — ver sección siguiente.
 
+### Validación entre disciplinas
+
+Cada disciplina consume el producto de la anterior, y la facilidad con que lo consume
+es el criterio de calidad de la anterior. Si una disciplina encuentra fricción (no
+puede derivar limpiamente lo que necesita del artefacto previo), la causa no suele
+estar en la disciplina en curso sino aguas arriba. La fricción es un detector de
+defectos, no un problema del trabajo actual.
+
+El rigor del detector crece a lo largo del pipeline: en análisis la detecta el juicio
+(un caso de uso que cuesta analizar revela requisitos incompletos); en implementación
+la detecta el compilador sin opinión (componentes que no enlazan revelan diseño mal
+integrado); en pruebas la detecta la ejecución. Cuanto más tarde, más objetivo el
+detector.
+
+Consecuencia operativa: la fricción siempre se atribuye a su origen aguas arriba,
+pero dónde se corrige depende del modo. El director humano vuelve a la disciplina
+donde está el defecto y lo corrige allí (un defecto que aflora en diseño se resuelve
+en análisis o en el modelo del dominio). CORRAL no retrocede de fase: registra la
+fricción como observación del milestone y la corrige hacia delante, en una iteración
+de corrección dentro de la fase actual. Lo común a ambos modos es la atribución al
+origen; lo que difiere es si se vuelve allí o se compensa hacia delante. Esta es la
+misma divergencia humano/CORRAL que describe la sección "Gestión humana y
+orquestación CORRAL" (manifestación 1, retroceso).
+
+### Patrón de delegabilidad
+
+El reparto entre orquestador y agentes subordinados sigue un patrón constante en
+todas las disciplinas del bucle:
+
+- **Retiene el orquestador:** la actividad de arquitectura (establecer el esqueleto:
+  A1, D1, I1) y la de integración o estructura global (A4, D4, I2). Son decisiones
+  que comprometen al conjunto.
+- **Se delega:** la derivación caso a caso (A2, D2, I3). Una vez fijado el esqueleto
+  es mecánica.
+
+El esqueleto y la integración no se delegan; el relleno sí. Las secciones de cada
+disciplina refieren este patrón y marcan cada actividad como delegable o no según él.
+
 ### Gestión humana y orquestación CORRAL: dónde divergen
 
 El cuerpo de este protocolo describe el método tal como lo aplica un director humano.
@@ -184,6 +222,16 @@ Las notas en estos diagramas pueden capturar reglas del dominio.
 ### Glosario
 
 Solo si el vocabulario del dominio es ambiguo o específico del negocio.
+
+### Autoridad sobre las entidades
+
+El modelo del dominio es la autoridad sobre las entidades y sus campos. Todas las
+disciplinas derivan sus representaciones de entidad del dominio; ninguna inventa
+campos ni los renombra por su cuenta. Cuando dos disciplinas discrepan sobre los
+campos de una entidad, el defecto se resuelve en el dominio, que fija el vocabulario
+canónico, y las disciplinas se realinean a él. La deriva de vocabulario entre
+disciplinas es un caso particular de fricción (ver sección macro) y se corrige hacia
+arriba, en el dominio, no lateralmente.
 
 ### Criterio de completitud
 
@@ -451,6 +499,21 @@ El resultado actualiza tres artefactos:
   sub-flujos factorizados por la referencia al nuevo caso de uso.
 - Se crean nuevos casos de uso con su propio detalle y prototipo correspondientes.
 
+### Criterios de cierre de requisitos
+
+Requisitos opera en dos cadencias y su delegabilidad es un gradiente, no un patrón
+binario. Los cierres son dos:
+
+**Cierre de base** (antes del primer ramillete): modelo del dominio completo, casos
+de uso identificados y depurados (heurística CRUD más conversación con actores),
+diagramas de contexto cerrados por actor, no funcionales de primer nivel capturados,
+ramilletes priorizados por riesgo arquitectónico.
+
+**Cierre de bucle** (antes de la pausa que abre análisis, por ramillete): casos de
+uso del ramillete con detalle, prototipo y estructuración completados, no funcionales
+de segundo nivel capturados. Coincide exactamente con el criterio de entrada que
+análisis declara.
+
 ---
 
 ## Paso 5: Análisis
@@ -519,6 +582,15 @@ La derivación es directa en tres direcciones, sin información nueva:
 
 Cada clase traza hacia atrás a un artefacto de requisitos: controlador <-> caso de
 uso, vista <-> prototipo, modelos <-> entidades del dominio.
+
+**Par entidad/repositorio:** una entidad del dominio que requiere persistencia se
+representa en análisis como dos clases estereotipadas: la entidad y su repositorio
+(`Entidad` y `EntidadRepository`), ambas agnósticas de tecnología. El repositorio en
+análisis no es una decisión técnica: es el reconocimiento de que esa entidad se
+persiste y se recupera, y es la forma concreta de capturar la persistencia como
+requisito especial (lo que A1 manda identificar). En diseño ese par se concreta al
+stack: el repositorio gana tecnología (queries, ORM) y, si la relación lo exige,
+aparecen las tablas intermedias del modelo relacional.
 
 **La dificultad como señal:** si analizar un caso de uso cuesta (no se derivan
 limpiamente controlador, vista y modelos), la causa no suele estar en el análisis
