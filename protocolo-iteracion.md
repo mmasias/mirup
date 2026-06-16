@@ -1,10 +1,11 @@
 # Protocolo de iteración — miRUP
 
+> *Este protocolo se inspira y está derivado de los trabajos de Luis Fernández Muñoz.*
+
 Secuencia concreta que sigue el orquestador (o el director humano) para recorrer
 una iteración de principio a fin. No describe los artefactos RUP estándar, sino
 el cómo y el orden específicos de este método.
 
-Este protocolo está derivado e inspirado en los trabajos de Luis Fernández Muñoz.
 Nace de la gestión y ejecución humana de proyectos en RUP. Se traza
 aquí para que también un LLM pueda construir siguiendo el proceso: aportando su
 potencia pero ciñéndose al protocolo. Por eso cada disciplina se escribe con criterio
