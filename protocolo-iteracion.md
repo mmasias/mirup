@@ -4,7 +4,8 @@ Secuencia concreta que sigue el orquestador (o el director humano) para recorrer
 una iteración de principio a fin. No describe los artefactos RUP estándar, sino
 el cómo y el orden específicos de este método.
 
-Este protocolo nace de la gestión y ejecución humana de proyectos en RUP. Se traza
+Este protocolo está derivado e inspirado en los trabajos de Luis Fernández Muñoz.
+Nace de la gestión y ejecución humana de proyectos en RUP. Se traza
 aquí para que también un LLM pueda construir siguiendo el proceso: aportando su
 potencia pero ciñéndose al protocolo. Por eso cada disciplina se escribe con criterio
 de entrada, criterio de salida y contraindicaciones explícitos, en lugar de confiar
@@ -520,7 +521,7 @@ análisis declara.
 
 **Disciplina:** análisis
 
-Derivado del método de Luis Fernández Muñoz. Es un modelo en sí mismo, no un
+Es un modelo en sí mismo, no un
 borrador del diseño.
 
 **Criterio de entrada:** casos de uso del ramillete priorizados y especificados
@@ -670,7 +671,7 @@ traza a su clase. Listo para la pausa arquitectónica que abre diseño.
 
 **Disciplina:** diseño
 
-Derivado del método de Luis Fernández Muñoz. A diferencia de análisis (tecnológicamente
+A diferencia de análisis (tecnológicamente
 agnóstico), diseño incorpora la tecnología concreta: lenguaje, framework, persistencia,
 concurrencia, despliegue.
 
@@ -785,7 +786,7 @@ menos requiere decisión humana (D1). El primer gradiente de la pausa arquitect�
 
 **Disciplina:** implementación
 
-Derivado del método de Luis Fernández Muñoz. Implementa el sistema en términos de
+Implementa el sistema en términos de
 componentes: código fuente, binarios, ejecutables.
 
 **Criterio de entrada:** modelo de diseño del ramillete (clases de diseño completas
