@@ -4,6 +4,87 @@ Secuencia concreta que sigue el orquestador (o el director humano) para recorrer
 una iteración de principio a fin. No describe los artefactos RUP estándar, sino
 el cómo y el orden específicos de este método.
 
+Este protocolo nace de la gestión y ejecución humana de proyectos en RUP. Se traza
+aquí para que también un LLM pueda construir siguiendo el proceso: aportando su
+potencia pero ciñéndose al protocolo. Por eso cada disciplina se escribe con criterio
+de entrada, criterio de salida y contraindicaciones explícitos, en lugar de confiar
+en el juicio tácito del director. El director humano pasa a ser orquestador; las
+decisiones que antes tomaba por instinto se vuelven reglas o puntos de control.
+
+---
+
+## Estructura del protocolo: dos niveles
+
+El protocolo opera en dos niveles:
+
+- **Nivel macro** (este apartado): el bucle de iteración. Qué entra en una iteración,
+  en qué orden recorre las disciplinas y qué ocurre entre ellas.
+- **Nivel micro** (los pasos numerados que siguen): el contenido concreto de cada
+  disciplina.
+
+### Base y bucle
+
+No todo se produce con la misma cadencia:
+
+- **Base del proyecto** (se produce una vez, al inicio o al abrir un incremento mayor):
+  el modelo del dominio y el modelo de casos de uso completo. Es el mapa del territorio.
+  Corresponde a los pasos 1 y 2, e incluye la priorización (2.4), que parte ese mapa
+  en ramilletes y los ordena.
+- **Bucle de iteración** (se recorre una vez por ramillete, en orden de prioridad):
+  toma un ramillete y lo lleva por el pipeline de disciplinas hasta dejarlo construido
+  y verificado de punta a punta.
+
+La **unidad de avance es el ramillete**: la rama completa del diagrama de contexto -
+todos los casos de uso que comparten entidad y espacio de estados (definido en 2.4).
+No se avanza caso de uso a caso de uso suelto, sino ramillete a ramillete.
+
+El pipeline de disciplinas que recorre cada ramillete:
+
+```
+requisitos (detalle + prototipo + estructuración) -> análisis -> diseño -> implementación -> pruebas
+```
+
+entre cada par de disciplinas se intercala una pausa arquitectónica.
+
+### La pausa arquitectónica
+
+Punto de control entre disciplinas. Es un elemento de primer orden del protocolo, no
+un trámite.
+
+**Qué es.** Su naturaleza varía según la incertidumbre y el momento del proceso. Puede
+ser una de estas, o ambas a la vez:
+
+- **Verificación:** ¿lo que produjo la disciplina anterior se sostiene? Go / no-go
+  antes de abrir la siguiente.
+- **Decisión:** ¿qué decisiones transversales (capas, patrones, tecnología) hay que
+  tomar o confirmar, porque condicionan al resto del ramillete y a los ramilletes
+  siguientes?
+
+**Quién la ejecuta.** El orquestador, y solo el orquestador: el humano o el LLM de alto
+nivel (Claude). **Nunca se delega a agentes subordinados.** El reparto entre humano y
+LLM sigue dos gradientes que se suman:
+
+| Gradiente | Tira hacia el humano | Tira hacia el LLM de alto nivel |
+|---|---|---|
+| Madurez del proyecto | Iniciático, sin arquitectura asentada | Encaminado, con arquitectura clara y patrones establecidos |
+| Posición en el pipeline | Cerca de requisitos | Disciplinas tardías |
+
+La lógica del segundo gradiente: cerca de requisitos las decisiones comprometen más el
+resto del proyecto y tienen menos patrón previo, por eso las retiene el humano; en
+disciplinas tardías la decisión ya está acotada por lo decidido aguas arriba y hay
+patrón que seguir, terreno donde el LLM opera con seguridad.
+
+**Función de aprendizaje.** En un proyecto iniciático el humano ejecuta la pausa con el
+LLM de alto nivel observando. La pausa es el mecanismo por el que el LLM aprende la
+arquitectura del proyecto, hasta poder asumirla en iteraciones posteriores: a medida
+que el proyecto madura, el primer gradiente se desplaza solo hacia el LLM.
+
+**Salida.** Una decisión explícita: go/no-go más, si las hubo, las decisiones
+arquitectónicas tomadas. Esa salida se convierte en el criterio de entrada de la
+disciplina siguiente.
+
+<!-- pendiente de conversación: dónde y cómo se registra la decisión de la pausa (artefacto de la pausa) -->
+
 ---
 
 ## Paso 1: Modelo del dominio
