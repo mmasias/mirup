@@ -30,7 +30,7 @@ state "Ramillete  (por orden de prioridad)" as Ramillete {
   Analisis -[dashed]-> Analisis : pausa [no-go]
   Analisis --> Diseno : pausa [go]
 
-  note on link
+  note left on link
     máxima retención humana del pipeline
     decisión de stack tecnológico
   end note
@@ -55,15 +55,28 @@ state "Ramillete  (por orden de prioridad)" as Ramillete {
 
   state Consolidado : promover artefactos\ntransversales del ramillete
   Consolidado --> [*]
+
+  state Reset <<choice>>
+
+  Milestone -[dashed]--> Reset
+
+  Reset -[dotted]--> Requisitos
+  Reset -[dotted]--> Analisis
+  Reset -[dotted]--> Diseno
+  Reset -[dotted]-> Implementacion
+  'Reset -[dotted]-> Pruebas
 }
 
 Ramillete --> Ramillete : [quedan ramilletes]
 Ramillete --> [*] : [todos los ramilletes procesados]
 
-note right of Ramillete
-  Modo humano: un único milestone al cierre de Pruebas.
-  Modo CORRAL: un milestone por fase, antes de abrir la siguiente.
-  Ver sección "Gestión humana y orquestación CORRAL".
+note left of Ramillete
+  <b>Modo humano</b>: un único milestone
+  al cierre de Pruebas.
+  <b>Modo CORRAL</b>: un milestone por fase,
+  antes de abrir la siguiente.
+  Ver sección "Gestión humana y
+  orquestación CORRAL".
 end note
 
 @enduml
