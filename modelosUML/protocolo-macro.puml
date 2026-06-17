@@ -58,7 +58,7 @@ state "Ramillete  (por orden de prioridad)" as Ramillete {
 
   state Reset <<choice>>
 
-  Milestone -[dashed]--> Reset
+  Milestone -[dashed]--> Reset : reset\n[fricción estructural]
 
   Reset -[dotted]--> Requisitos
   Reset -[dotted]--> Analisis
