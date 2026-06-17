@@ -1,0 +1,99 @@
+@startuml diseno-delegabilidad
+
+skinparam StateBorderColor #424242
+skinparam StateBackgroundColor #FEFEFE
+skinparam ArrowColor #616161
+skinparam NoteBackgroundColor #FFFDE7
+skinparam NoteBorderColor #F9A825
+
+title Patrón de delegabilidad — Diseño (paso 6)
+
+[*] --> Esqueleto : pausa [go]
+
+state Esqueleto
+Esqueleto : D1 — Diseñar la arquitectura
+Esqueleto : orquestador — no delegable
+Esqueleto : stack tecnológico · nodos · subsistemas
+Esqueleto : mecanismos genéricos · vistas de despliegue
+
+state fork <<fork>>
+state join <<join>>
+
+Esqueleto --> fork
+
+fork --> AgenteCUI
+fork --> AgenteCUJ
+fork --> AgenteCUN
+
+state "Agente — caso de uso i" as AgenteCUI
+AgenteCUI : D2+D3 — becario — delegable
+AgenteCUI : diseñar CU · completar clases con tecnología
+
+state "Agente — caso de uso j" as AgenteCUJ
+AgenteCUJ : D2+D3 — becario — delegable
+AgenteCUJ : diseñar CU · completar clases con tecnología
+
+state "..." as AgenteCUN
+AgenteCUN : D2+D3 — becario — delegable
+AgenteCUN : (un agente por cada CU del ramillete)
+
+AgenteCUI --> join
+AgenteCUJ --> join
+AgenteCUN --> join
+
+join --> Integracion
+
+state Integracion
+Integracion : D4 — Diseñar subsistemas
+Integracion : orquestador — no delegable
+Integracion : cohesión y acoplamiento de subsistemas
+Integracion : interfaces · promueve al consolidado
+
+Integracion --> [*]
+
+note right of Esqueleto
+  Criterio de entrada: modelo de análisis del ramillete,
+  casos de uso, requisitos no funcionales, requisitos
+  especiales capturados en análisis y pausa
+  arquitectónica post-análisis resuelta.
+  —
+  D1 es la pausa arquitectónica de máxima retención
+  humana del pipeline: aquí se elige el stack (lenguaje,
+  framework, persistencia), decisión que compromete al
+  ramillete y a los siguientes. El LLM senior puede
+  proponer; la decisión la retiene el humano.
+  Una vez fijado el stack, D2+D3 son derivación mecánica.
+  —
+  Sin esqueleto validado,
+  ningún agente entra en derivación.
+  —
+  Quién ejecuta dentro del orquestador
+  (humano o LLM senior) lo determinan
+  las tres regiones del espacio de gobierno.
+end note
+
+note right of Integracion
+  Criterio de salida: casos de uso del ramillete
+  diseñados (clases completas con tecnología,
+  secuencias descritas), arquitectura de subsistemas
+  y despliegue definida, requisitos especiales
+  resueltos o pospuestos a implementación,
+  trazabilidad completa análisis - diseño.
+  Listo para la pausa arquitectónica que abre
+  implementación.
+  —
+  D3 no es fase separada: se ejecuta dentro de D2.
+  Al diseñar cada CU se completan las clases con
+  tecnología; D4 consolida por convergencia en el
+  diagrama de clases de diseño transversal, que
+  crece con cada ramillete.
+  —
+  Sin integración completada,
+  la disciplina no cierra.
+  —
+  Quién ejecuta dentro del orquestador
+  (humano o LLM senior) lo determinan
+  las tres regiones del espacio de gobierno.
+end note
+
+@enduml

@@ -1,0 +1,85 @@
+@startuml implementacion-delegabilidad
+
+skinparam StateBorderColor #424242
+skinparam StateBackgroundColor #FEFEFE
+skinparam ArrowColor #616161
+skinparam NoteBackgroundColor #FFFDE7
+skinparam NoteBorderColor #F9A825
+
+title Patrón de delegabilidad — Implementación (paso 7)
+
+[*] --> Esqueleto : pausa [go]
+
+state "I1 — Implementar la arquitectura" as Esqueleto
+Esqueleto : orquestador — no delegable
+Esqueleto : identifica componentes clave y confirma mapa componente → nodo
+
+state fork <<fork>>
+state join <<join>>
+
+Esqueleto --> fork
+
+fork --> ComponenteI
+fork --> ComponenteJ
+fork --> ComponenteN
+
+state "Agente — componente i" as ComponenteI
+ComponenteI : becario — delegable (I3 + I4)
+ComponenteI : implementar clase · prueba de unidad
+
+state "Agente — componente j" as ComponenteJ
+ComponenteJ : becario — delegable (I3 + I4)
+ComponenteJ : implementar clase · prueba de unidad
+
+state "..." as ComponenteN
+
+ComponenteI --> join
+ComponenteJ --> join
+ComponenteN --> join
+
+join --> I2
+
+state "I2 — Integrar sistemas" as I2 {
+  [*] --> Construccion
+  state "Construcción" as Construccion
+  Construccion : compilar y enlazar componentes disponibles
+  Construccion : orden por capas — lo que sostiene a otros, primero
+  Construccion -[dashed]-> Construccion : siguiente construcción\n[quedan componentes]
+  Construccion --> [*] : sistema ejecutable integrado
+}
+
+I2 --> [*]
+
+note right of Esqueleto
+  Criterio de entrada: modelo de diseño del ramillete
+  (clases con tecnología, secuencias), modelo de
+  despliegue y pausa post-diseño resuelta.
+  —
+  I1 es la pausa de menor peso del pipeline:
+  el stack ya está fijado; solo se confirma
+  el mapa componente-nodo.
+  —
+  Quién ejecuta dentro del orquestador
+  (humano o LLM senior) lo determinan
+  las tres regiones del espacio de gobierno.
+end note
+
+note right of I2
+  I2 no es un join pasivo: es el núcleo
+  no trivial de la disciplina.
+  Las construcciones se integran por capas e
+  incrementalmente — pueden solaparse con I3
+  mientras los agentes siguen produciendo.
+  La compilación conjunta es el test más duro
+  de que la orquestación funcionó.
+  —
+  Criterio de salida: componentes implementados
+  y probados como unidades, sistema ejecutable
+  que compila y pasa integración.
+  —
+  Quién ejecuta dentro del orquestador
+  (humano o LLM senior) lo determinan
+  las tres regiones del espacio de gobierno.
+end note
+
+@enduml

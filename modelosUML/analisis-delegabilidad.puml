@@ -1,0 +1,97 @@
+@startuml analisis-delegabilidad
+
+skinparam StateBorderColor #424242
+skinparam StateBackgroundColor #FEFEFE
+skinparam ArrowColor #616161
+skinparam NoteBackgroundColor #FFFDE7
+skinparam NoteBorderColor #F9A825
+
+title Patrón de delegabilidad — Análisis (paso 5)
+
+[*] --> Esqueleto : pausa [go]
+
+state Esqueleto
+Esqueleto : orquestador — no delegable
+Esqueleto : A1 — Analizar la arquitectura
+Esqueleto : esqueleto MV* (Vista · Controladora · Modelo)
+Esqueleto : paquetes de análisis · requisitos especiales
+
+state fork <<fork>>
+state join <<join>>
+
+Esqueleto --> fork
+
+fork --> AgenteCUI
+fork --> AgenteCUJ
+fork --> AgenteCUN
+
+state "Agente — caso de uso i" as AgenteCUI
+AgenteCUI : becario — delegable (A2 + A3)
+AgenteCUI : analizar CU · completar clases que participan
+
+state "Agente — caso de uso j" as AgenteCUJ
+AgenteCUJ : becario — delegable (A2 + A3)
+AgenteCUJ : analizar CU · completar clases que participan
+
+state "..." as AgenteCUN
+AgenteCUN : becario — delegable
+AgenteCUN : (un agente por cada CU del ramillete)
+
+AgenteCUI --> join
+AgenteCUJ --> join
+AgenteCUN --> join
+
+join --> Integracion
+
+state Integracion
+Integracion : orquestador — no delegable
+Integracion : A4 — Analizar paquetes
+Integracion : cohesión, acoplamiento y estructura global
+
+Integracion --> [*]
+
+note right of Esqueleto
+  Criterio de entrada de Análisis:
+  casos de uso del ramillete priorizados y especificados
+  (detalle + prototipo + estructuración completados),
+  modelo del dominio, requisitos no funcionales acumulados
+  y pausa arquitectónica post-requisitos resuelta.
+  —
+  A1 fija el esqueleto MV* antes de entrar caso por caso:
+  una Vista por actor humano, un Controlador por caso de
+  uso, Modelos por trazabilidad con el dominio. Identifica
+  paquetes y requisitos especiales (persistencia,
+  concurrencia, seguridad) que se gestionan en diseño.
+  —
+  Sin esqueleto validado,
+  ningún agente entra en derivación.
+  —
+  Quién ejecuta dentro del orquestador
+  (humano o LLM senior) lo determinan
+  las tres regiones del espacio de gobierno.
+end note
+
+note right of Integracion
+  Criterio de salida de Análisis:
+  casos de uso del ramillete analizados (clases con
+  responsabilidades, atributos y relaciones completados),
+  arquitectura de paquetes definida y revisada,
+  requisitos especiales capturados para diseño,
+  trazabilidad completa clase - caso de uso - objeto.
+  Listo para la pausa arquitectónica que abre diseño.
+  —
+  A3 no es fase separada: se ejecuta dentro de A2.
+  Al analizar cada CU se completan las clases que
+  participan en él; A4 consolida por convergencia
+  en el diagrama de clases transversal, que crece
+  con cada ramillete.
+  —
+  Sin integración completada,
+  la disciplina no cierra.
+  —
+  Quién ejecuta dentro del orquestador
+  (humano o LLM senior) lo determinan
+  las tres regiones del espacio de gobierno.
+end note
+
+@enduml

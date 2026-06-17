@@ -1,0 +1,90 @@
+@startuml pruebas-delegabilidad
+
+skinparam StateBorderColor #424242
+skinparam StateBackgroundColor #FEFEFE
+skinparam ArrowColor #616161
+skinparam NoteBackgroundColor #FFFDE7
+skinparam NoteBorderColor #F9A825
+
+title Patrón de delegabilidad — Pruebas (paso 8)
+
+[*] --> Esqueleto : pausa [go]
+
+state "T1 — Planificar la prueba" as Esqueleto
+Esqueleto : orquestador — no delegable
+Esqueleto : estrategia · alcance · criterios de aceptación · orden de prueba
+
+state fork <<fork>>
+state join <<join>>
+
+Esqueleto --> fork
+
+fork --> AgenteI
+fork --> AgenteJ
+fork --> AgenteN
+
+state "Agente — caso de uso i" as AgenteI
+AgenteI : becario — delegable (T2 + T3)
+AgenteI : diseñar casos de prueba · implementar automatización
+
+state "Agente — caso de uso j" as AgenteJ
+AgenteJ : becario — delegable (T2 + T3)
+AgenteJ : diseñar casos de prueba · implementar automatización
+
+state "..." as AgenteN
+
+AgenteI --> join
+AgenteJ --> join
+AgenteN --> join
+
+join --> T4
+
+state "T4 — Ejecutar y evaluar" as T4 {
+  [*] --> Ejecutar
+
+  state Ejecutar
+  Ejecutar : becario — delegable
+  Ejecutar : ejecutar pruebas sobre el sistema integrado
+
+  Ejecutar --> Moderar
+
+  state Moderar
+  Moderar : orquestador — no delegable (moderador)
+  Moderar : atribuir defecto a su origen aguas arriba
+  Moderar : decidir corrección local o registro para milestone
+
+  Moderar -[dashed]-> Ejecutar : corregir y reejecutar\n[quedan defectos locales]
+  Moderar --> [*] : ramillete en verde
+}
+
+T4 --> [*]
+
+note right of Esqueleto
+  Criterio de entrada: sistema ejecutable que compila
+  y pasa integración de construcciones, CU con detalle
+  y prototipo, RNF acumulados y pausa
+  post-implementación resuelta.
+  —
+  Quién ejecuta dentro del orquestador
+  (humano o LLM senior) lo determinan
+  las tres regiones del espacio de gobierno.
+end note
+
+note right of T4
+  T4 no es un join pasivo: es topología cycle
+  con moderador. Solo el moderador (orquestador)
+  atribuye el defecto y decide si se corrige
+  aquí o se registra para el milestone.
+  Las vueltas del ciclo (ejecutar, corregir)
+  son delegables; la moderación no lo es.
+  —
+  Criterio de salida: ramillete verificado en
+  integración y sistema, defectos atribuidos,
+  pruebas en verde en lo que es suyo.
+  —
+  Quién ejecuta dentro del orquestador
+  (humano o LLM senior) lo determinan
+  las tres regiones del espacio de gobierno.
+end note
+
+@enduml

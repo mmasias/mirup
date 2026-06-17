@@ -1,0 +1,65 @@
+@startuml patron-delegabilidad
+
+skinparam StateBorderColor #424242
+skinparam StateBackgroundColor #FEFEFE
+skinparam ArrowColor #616161
+skinparam NoteBackgroundColor #FFFDE7
+skinparam NoteBorderColor #F9A825
+
+title Patrón de delegabilidad — disciplina genérica
+
+[*] --> Esqueleto : pausa [go]
+
+state Esqueleto
+Esqueleto : orquestador — no delegable
+Esqueleto : establece la estructura global
+
+state fork <<fork>>
+state join <<join>>
+
+Esqueleto --> fork
+
+fork --> ElementoI
+fork --> ElementoJ
+fork --> ElementoN
+
+state "Agente — elemento i" as ElementoI
+ElementoI : becario — delegable
+
+state "Agente — elemento j" as ElementoJ
+ElementoJ : becario — delegable
+
+state "Agente — elemento n" as ElementoN
+ElementoN : becario — delegable
+
+ElementoI --> join
+ElementoJ --> join
+ElementoN --> join
+
+join --> Integracion
+
+state Integracion
+Integracion : orquestador — no delegable
+Integracion : consolida la estructura global
+
+Integracion --> [*]
+
+note right of Esqueleto
+  Sin esqueleto validado,
+  ningún elemento entra en derivación.
+  —
+  Quién ejecuta dentro del orquestador
+  (humano o LLM senior) lo determinan
+  las tres regiones del espacio de gobierno.
+end note
+
+note right of Integracion
+  Sin integración completada,
+  la disciplina no cierra.
+  —
+  Quién ejecuta dentro del orquestador
+  (humano o LLM senior) lo determinan
+  las tres regiones del espacio de gobierno.
+end note
+
+@enduml
