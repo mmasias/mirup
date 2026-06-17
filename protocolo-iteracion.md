@@ -91,7 +91,9 @@ ser una de estas, o ambas a la vez:
 
 **Quién la ejecuta.** El orquestador, y solo el orquestador: el humano o el LLM de alto
 nivel (Claude). **Nunca se delega a agentes subordinados.** El reparto entre humano y
-LLM sigue dos gradientes que se suman:
+LLM se rige por dos factores que miden cosas distintas y se componen (no se suman) según
+detalla la sección de gobierno: la madurez del proyecto en esa disciplina y el riesgo
+arquitectónico del caso. La tabla siguiente da la intuición de cada factor por separado.
 
 | Gradiente | Tira hacia el humano | Tira hacia el LLM de alto nivel |
 |---|---|---|
@@ -188,7 +190,174 @@ tramos discretos, no en una pasada continua.
 dos gradientes (madurez del proyecto y posición en el pipeline). Es la manifestación
 más fina del mismo principio: a medida que el proyecto madura y las fases avanzan, la
 pausa se desplaza del humano al orquestador LLM, siguiendo la misma lógica de puertas
-discretas con responsabilidad progresivamente delegable.
+discretas con responsabilidad progresivamente delegable. La mecánica completa de
+ese desplazamiento - las tres regiones, el riesgo y la banda - se describe en la
+sección de gobierno siguiente.
+
+---
+
+## Espacio de gobierno: el reparto humano/LLM
+
+El cuerpo del protocolo (pasos 1-8) describe las disciplinas en registro agnóstico de
+orquestador: qué produce cada una, sus criterios de entrada y salida, su delegabilidad
+y su topología. Esta sección describe lo que es propio de la ejecución bajo CORRAL y no
+pertenece a ninguna disciplina: cómo se reparte entre humano y LLM senior lo que el
+orquestador retiene. Va aparte por la misma razón por la que va aparte en el filesystem.
+
+### Producto y gobierno: dos espacios
+
+Conviven dos espacios con responsabilidad distinta:
+
+- **Espacio de producto**, gobernado por el Contrato 1 de CORRAL-RUP
+  (`{fase}/{iteracion}/{disciplina}/{artefacto}`): lo que las disciplinas producen y se
+  delega a becarios. Diagramas, código, casos de prueba.
+- **Espacio de gobierno**, con estructura estable propia: el milestone colgando de la
+  fase (`{fase}/milestone`) y la pausa colgando de la iteración
+  (`{iteracion}/pausa-{disciplina}.md`). Lo que regula transiciones, no delegable,
+  escrito siempre por el orquestador.
+
+El Contrato 1 nunca fue para los objetos de gobierno, solo para los artefactos de
+producto. El milestone ya vivía fuera de los slots, y eso no era una excepción al
+contrato: era un objeto de otra categoría. La pausa es su hermana - gobierna la
+transición entre disciplinas como el milestone gobierna el cierre de fase - y vive en el
+mismo espacio. No se mete la pausa en los slots ni se declara excepción: se reconoce una
+segunda categoría que ya operaba sin nombre.
+
+La separación física refleja la separación de responsabilidad. El espacio de gobierno es
+el del juicio (pausas y milestones, los puntos no delegables); el de producto es el del
+relleno delegable. Becarios escriben en producto, orquestador en gobierno. Que estén en
+sitios distintos del filesystem es que los escriben agentes distintos.
+
+### Las tres regiones de la pausa
+
+Los dos gradientes de la pausa arquitectónica (madurez del proyecto y posición en el
+pipeline) se concretan en tres regiones de comportamiento. La región clasifica quién
+ejecuta la pausa intermedia; el go/no-go del milestone que cierra fase es humano
+invariante en las tres, y nunca se delega. Como el humano siempre ve el milestone, la
+clasificación puede inclinarse hacia la delegación sin riesgo: el milestone es el
+backstop humano que atrapa cualquier pausa mal delegada.
+
+| Región | Comportamiento | Quién decide |
+|---|---|---|
+| **Delegada** | El LLM senior ejecuta la pausa; CORRAL sigue sin parar. El humano se entera por el registro. | LLM, autónomo |
+| **Retenida** | CORRAL para y espera decisión humana. El LLM no decide. | Humano, asistido |
+| **Banda** | El LLM propone; CORRAL marca la decisión provisional y la presenta al humano para confirmación rápida. No para del todo, pero no promueve sin visto bueno. | Compartido, colaborativo |
+
+La banda implementa el "compartido" como protocolo de propuesta-confirmación,
+ejecutable, sin convertirlo en frontera nítida. Es donde ocurre el aprendizaje: cada
+confirmación o corrección desplaza el sesgo de esa disciplina.
+
+La frontera orquestador/becario (qué se delega al subordinado) es nítida y fija, escrita
+por actividad. La frontera humano/LLM (dentro de lo que retiene el orquestador, quién lo
+ejecuta) no lo es: es una banda ancha, área y no línea. Su anchura no es imprecisión; es
+donde viven el aprendizaje y la libertad del orquestador para situarse en el borde
+cuando el caso lo pide. Colapsar la banda en una línea elimina la transferencia gradual
+de confianza.
+
+### Riesgo arquitectónico y residencia en banda
+
+El tiempo que una disciplina reside en banda antes de poder delegarse lo fija el riesgo
+arquitectónico de lo que tiene delante, no la disciplina en abstracto. Requisitos no es
+exigente por ser requisitos: lo es cuando requisita algo no trivial. Un CRUD sale casi
+de la heurística 2.1 y reside poco; un caso de uso que define estados operacionales
+nuevos reside más. La variable real es cuánto del juicio es derivable.
+
+**Tres niveles, identidad con la residencia.** `riesgo_introducido` toma valores
+`bajo | medio | alto`, y `residencia_min = {bajo:1, medio:2, alto:3}` milestones
+limpios. El nivel es el número de milestones; no hay multiplicador intermedio. Tres
+niveles porque es un juicio que humano o LLM emiten con consistencia; más sería falsa
+precisión. No se deriva del orden de priorización 2.4: ese orden es ordinal y relativo
+al proyecto (secuencia ramilletes), mientras la residencia necesita escala absoluta
+pequeña; y 2.4 solo conoce el riesgo de requisitos, no el que cada disciplina posterior
+introduce.
+
+**Herencia monótona.** El riesgo de una disciplina es el máximo entre el heredado de la
+anterior y el que ella misma introduce:
+
+```
+riesgo(D) = max( riesgo(D-1), riesgo_introducido(D) )
+```
+
+No decreciente al descender el pipeline. La complejidad se hereda; la simplicidad no. Un
+caso difícil en requisitos llega a diseño con riesgo heredado alto que diseño no rebaja
+aunque tecnológicamente sea simple. Un caso trivial en requisitos llega con riesgo bajo,
+pero si diseño introduce 3D su riesgo sube y su banda se ensancha. Cada disciplina aporta
+su dimensión: requisitos la del comportamiento, diseño la de la tecnología,
+implementación la del algoritmo.
+
+**Estimación en cadena, sin recursión.** `riesgo_introducido(D)` se estima en la pausa
+que abre D, que es cola del cierre de D-1. Detectar que un caso trivial necesitará 3D es
+juicio de pausa, y encaja con que la pausa pre-diseño sea la de máxima retención humana:
+elegir stack y detectar que un caso pide 3D son la misma decisión en el mismo punto.
+Cuando D abre, su riesgo le viene dado desde atrás; D no calcula su peaje.
+
+**Dónde se registra.** En el frontmatter de la pausa que abre D:
+
+```yaml
+---
+abre: diseno
+riesgo-introducido: alto
+---
+```
+
+Con la convención que preserva "ausencia = paso limpio": sin fichero de pausa,
+`riesgo_introducido = bajo` (residencia 1). El fichero aparece solo cuando hay algo que
+registrar - riesgo medio o alto, o decisiones arquitectónicas - y la ausencia sigue
+significando "nada destacable". `riesgo_introducido(requisitos)` no tiene pausa de
+apertura (requisitos es base); su nivel se registra en la priorización 2.4 del registry,
+junto al orden.
+
+### Los dos pliegues
+
+Todo el reparto humano/LLM se reduce a dos pliegues sobre datos que ya existen, ambos
+derivables, ninguno persistido (principio de derivados de CORRAL-RUP):
+
+- **región(D) = pliegue sobre el historial ordenado de milestones**, con la regla de
+  transición de abajo.
+- **riesgo(D) = pliegue `max` sobre la cadena de pausas del ramillete** (semilla de 2.4,
+  luego pausa-analisis, pausa-diseno... hasta D).
+
+El segundo parametriza la condición (b) del primero. Misma disciplina formal en los dos.
+Ninguno se cachea: persistir el acumulado crearía dos fuentes de verdad y quedaría
+obsoleto al corregir un riesgo aguas arriba. El coste de replay es nulo (a lo sumo cinco
+valores por ramillete).
+
+**Regla de transición de la región** (replay sobre los milestones, por disciplina):
+
+```
+estado inicial: lo fija la posición.
+  disciplinas tempranas (requisitos) arrancan en retenida
+  disciplinas tardías (pruebas) arrancan en banda
+al replicar cada milestone limpio que contiene D (aprobado, sin ningún rechazo):
+  retenida -> banda : al primer milestone limpio
+  banda -> delegada : si (a) la madurez supera el coste de avance
+                         (alto en disciplinas tempranas, bajo en tardías: el eje posición)
+                      y (b) se han acumulado al menos residencia_min(D)
+                         milestones limpios estando en banda
+un rechazo de D: retrocede un escalón (confianza perdida)
+```
+
+Madurez de D = número de pares (fase, iteración) donde D aparece y cuyo milestone es
+aprobado-limpio (exactamente una creación y una evaluación aprobada, cero rechazos). Se
+cuenta del historial, no de ficheros de pausa: una pausa limpia no deja fichero, y
+contar ficheros subcontaría justo los pasos limpios.
+
+**Anti-colapso.** `residencia_min(D)` tiene suelo absoluto en uno aunque el riesgo sea
+cero: ninguna disciplina salta de retenida a delegada sin pasar por banda. La banda no
+se cruza, se atraviesa, y atravesarla cuesta siempre al menos un milestone limpio. Lo
+que encoge con la madurez es el coste de avance, que cae hacia su suelo de uno pero
+nunca a cero; la banda se adelgaza, no desaparece. Cada disciplina nueva y cada
+iteración nueva vuelven a entrar por ella.
+
+### Madurez contra riesgo: por qué dos ejes
+
+Madurez y riesgo no son redundantes porque miden cosas distintas. La madurez es
+competencia general del proyecto en una disciplina (de proyecto, historial de milestones
+limpios): dice "ya sabemos diseñar". El riesgo es exigencia intrínseca de un caso
+concreto (de ramillete): dice "pero este caso pide más". A igual madurez de proyecto, el
+diseño de un CRUD se delega pronto (suelo 1) y el del caso 3D sigue en banda (suelo 3).
+El conteo de milestones limpios en banda es de proyecto; el umbral que debe superar es
+del ramillete. Experiencia acumulada general contra exigencia de este caso.
 
 ---
 
@@ -882,4 +1051,95 @@ trazabilidad completa diseño -> código. Listo para la pausa que abre pruebas.
 
 ---
 
-<!-- paso 8 y siguientes: pruebas — en construcción -->
+## Paso 8: Pruebas
+
+**Disciplina:** pruebas
+
+Verifica por ejecución que el ramillete construido realiza sus casos de uso y cumple sus
+requisitos no funcionales. Cubre integración y sistema; la prueba de unidad ya se hizo
+en implementación (I4), pegada al componente. Los artefactos de especificación de prueba
+se expresan en el mismo ecosistema que el resto (PlantUML donde aplique); el código de
+prueba, en el stack de la solución.
+
+**Criterio de entrada:** sistema ejecutable del ramillete que compila y pasa integración
+de construcciones (criterio de salida de implementación), modelo de implementación,
+casos de uso con su detalle y prototipo, requisitos no funcionales acumulados, y pausa
+arquitectónica post-implementación resuelta.
+
+**Propósito:** ejercitar el ramillete integrado contra su especificación para confirmar
+que lo construido es lo requerido, y atribuir cualquier defecto a su origen. Es el
+detector de fricción más objetivo del pipeline: donde en análisis la detecta el juicio y
+en implementación el compilador, en pruebas la detecta la ejecución, sin opinión.
+
+**Continuidad de artefactos:** los casos de prueba se derivan del detalle del caso de uso
+(flujos e interacción) y de su prototipo (contrato de interacción), con trazabilidad
+directa. No añaden información: transcriben la especificación a verificación ejecutable.
+
+### T1. Planificar la prueba
+
+Establece la estrategia y el alcance antes de entrar caso por caso: qué se prueba
+(integración entre componentes del ramillete, sistema contra casos de uso y contra no
+funcionales), criterios de aceptación derivados de la especificación, y orden de prueba
+según la integración por capas que dejó implementación. No delegable: es decisión de
+estructura, vive en el orquestador y se confirma en la pausa. Transversal: el plan de
+pruebas del proyecto crece con cada ramillete.
+
+### T2. Diseñar los casos de prueba
+
+Para cada caso de uso del ramillete, derivar los casos de prueba. Delegable, topología
+fan-out: un agente por caso de uso, independientes entre sí. Ramillete.
+
+- **Prueba de especificación (caja negra):** del detalle del caso de uso salen los flujos
+  a verificar; del prototipo, las entradas, las salidas observables y los códigos de
+  resultado. Cada caso de prueba traza a un caso de uso.
+- Los caminos alternativos y las excepciones que diseño descubrió (timeouts, entradas
+  erróneas) son casos de prueba obligatorios, no opcionales.
+
+La cobertura estructural (caja blanca) ya se cubrió a nivel de unidad en I4; aquí la
+prueba es de comportamiento contra la especificación.
+
+### T3. Implementar la prueba
+
+Automatizar los casos de prueba diseñados en el stack de prueba que corresponde al stack
+de la solución (fijado en diseño). Una vez fijado el caso de prueba y el stack, es
+derivación mecánica. Delegable, topología fan-out: un agente por caso de uso o
+componente. Ramillete.
+
+### T4. Ejecutar y evaluar
+
+Ejecutar la prueba sobre el sistema integrado y evaluar el resultado. Topología cycle,
+con moderador:
+
+```
+ejecutar -> fallo -> atribuir el defecto a su origen aguas arriba -> corregir -> reejecutar
+```
+
+El moderador (papel no delegable) decide en cada vuelta una de dos cosas: si el defecto
+cae dentro del ramillete y se corrige hacia delante hasta que la prueba pasa, o si
+pertenece a una fase anterior, y entonces no se corrige aquí: se registra como
+observación para el milestone, que no retrocede de fase (regla de no-retroceso). La
+atribución sigue la regla de validación entre disciplinas: la fricción se imputa a su
+origen, no a la disciplina en curso. Las vueltas del ciclo (ejecutar y corregir) son
+delegables; la moderación no.
+
+### Artefactos producidos
+
+| Actividad | Artefacto | Cardinalidad | Tipo |
+|---|---|---|---|
+| T1 | Plan de pruebas | 1 por proyecto | transversal |
+| T2 | Casos de prueba (especificación) | 1 por caso de uso | ramillete |
+| T3 | Pruebas automatizadas (código de prueba) | 1 por caso de uso | ramillete |
+| T4 | Resultados de ejecución y defectos atribuidos | 1 por ramillete | ramillete |
+
+### Criterio de salida
+
+Ramillete verificado en integración y sistema, casos de prueba trazados a casos de uso,
+requisitos no funcionales comprobados, defectos residuales atribuidos a su origen
+(corregidos hacia delante dentro de la fase, o registrados como observación del
+milestone). El ramillete pasa en verde lo que es suyo. Es la última disciplina antes del
+milestone que cierra la fase: su criterio de salida es la evidencia que el milestone
+evalúa.
+
+---
+
+<!-- gestion-config y gestion-proyecto: disciplinas de soporte, fuera del pipeline por ramillete; tratamiento pendiente de decidir -->
