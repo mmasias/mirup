@@ -1,0 +1,69 @@
+@startuml 
+
+title Protocolo de iteración miRUP — ciclo de vida del ramillete
+
+[*] --> Base
+
+state "Base  (una vez)" as Base {
+  [*] --> Dominio
+  Dominio : paso 1 — modelo del dominio
+  Dominio --> CasosUso
+
+  CasosUso : pasos 2.1–2.3 — actores · casos de uso · diagramas de contexto
+  CasosUso --> Priorizacion
+
+  Priorizacion : paso 2.4 — ramilletes priorizados por riesgo arquitectónico
+  Priorizacion --> [*]
+}
+
+Base --> Ramillete
+
+state "Ramillete  (por orden de prioridad)" as Ramillete {
+
+  [*] --> Requisitos
+
+  Requisitos : pasos 3–4 — detalle · prototipo · estructuración
+  Requisitos -[dashed]-> Requisitos : pausa [no-go]
+  Requisitos --> Analisis : pausa [go]
+
+  Analisis : paso 5 — análisis
+  Analisis -[dashed]-> Analisis : pausa [no-go]
+  Analisis --> Diseno : pausa [go]
+
+  note on link
+    máxima retención humana del pipeline
+    decisión de stack tecnológico
+  end note
+
+  Diseno : paso 6 — diseño
+  Diseno -[dashed]-> Diseno : pausa [no-go]
+  Diseno --> Implementacion : pausa [go]
+
+  Implementacion : paso 7 — implementación
+  Implementacion -[dashed]-> Implementacion : pausa [no-go]
+  Implementacion --> Pruebas : pausa [go]
+
+  Pruebas : paso 8 — pruebas
+  Pruebas --> Milestone
+
+  state Milestone : cierre del ramillete
+  Milestone --> Correccion : rechazar\n[corrección local]
+  Milestone --> Consolidado : aprobar
+
+  state Correccion : iteración de corrección\ndentro de la fase — hacia delante
+  Correccion --> Milestone
+
+  state Consolidado : promover artefactos\ntransversales del ramillete
+  Consolidado --> [*]
+}
+
+Ramillete --> Ramillete : [quedan ramilletes]
+Ramillete --> [*] : [todos los ramilletes procesados]
+
+note right of Ramillete
+  Modo humano: un único milestone al cierre de Pruebas.
+  Modo CORRAL: un milestone por fase, antes de abrir la siguiente.
+  Ver sección "Gestión humana y orquestación CORRAL".
+end note
+
+@enduml
